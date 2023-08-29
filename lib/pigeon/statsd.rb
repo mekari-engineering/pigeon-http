@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Pigeon
-  class Datadog
-    def initialize(name:, tags: [])
+  class Statsd
+    def initialize(name, tags: [])
       @statsd = Datadog::Statsd.new(ENV['STATSD_HOST'], ENV['STATSD_PORT'], tags: ["environment:#{ENV['DD_ENV']}", "project:#{ENV['DD_SERVICE']}"])
       @name   = name
       @tags   = tags
@@ -30,13 +30,13 @@ module Pigeon
       @statsd.flush(sync: true)
       @statsd.close
     end
-  
+
     def count(count: 0, tags: [])
       @statsd.count(@name, count, tags: tags)
       @statsd.flush(sync: true)
       @statsd.close
     end
-  
+
     def histogram(count: 0, tags: [])
       @statsd.histogram(@name, count, tags: tags)
       @statsd.flush(sync: true)
