@@ -36,12 +36,6 @@ module Pigeon
         @ssl_timeout  = args[:ssl_timeout]  if args[:ssl_timeout]
         @ssl_verify   = args.fetch(:ssl_verify, SSL_VERIFY_PEER)
 
-        # handle json body
-        if (body = args[:body])
-          raise Error::Argument, "#{verb} cannot have body" unless @delegate.class.const_get(:REQUEST_HAS_BODY)
-          @delegate.body = body
-        end
-
         # handle basic auth
         if (auth = args[:auth])
           @delegate.basic_auth(auth.fetch(:username), auth.fetch(:password))
@@ -54,7 +48,7 @@ module Pigeon
 
       def execute
         response = request!(uri, @delegate)
-        Response.new(response, last_effective_uri)
+        Response.new(response, uri)
       end
 
       private
@@ -86,7 +80,7 @@ module Pigeon
       def create_request_delegate verb, uri, args
         klass    = find_delegate_class(verb)
         headers  = DEFAULT_HEADERS.merge(args.fetch(:headers, {}))
-        body     = args[:body]
+        body     = args[:body]&.to_json
         query    = args[:query]
         uri      = uri.dup
         delegate = klass.new(uri, headers)
@@ -94,7 +88,7 @@ module Pigeon
         if body
           raise Error::Argument, "#{verb} cannot have body" unless klass.const_get(:REQUEST_HAS_BODY)
           delegate.content_type = 'application/json'
-          delegate.body         = body.to_json
+          delegate.body         = body
         elsif query
           if klass.const_get(:REQUEST_HAS_BODY)
             delegate = klass.new(uri, headers)
@@ -157,11 +151,11 @@ module Pigeon
     end
 
     class Response
-      attr_reader :last_effective_uri, :response
+      attr_reader :uri, :response
 
-      def initialize response, last_effective_uri
-        @response           = response
-        @last_effective_uri = last_effective_uri
+      def initialize response, uri
+        @response = response
+        @uri      = uri
       end
 
       def code
@@ -189,7 +183,7 @@ module Pigeon
       end
 
       def inspect
-        "#<#{self.class} @code=#{code} @last_effective_uri=#{last_effective_uri}>"
+        "#<#{self.class} @code=#{code} @uri=#{uri}>"
       end
     end
 
