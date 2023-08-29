@@ -40,14 +40,10 @@ module Pigeon
     RetryFailure:        nil
   }
 
-  class << self
+  class Client
     attr_writer :request_name, :options, :callbacks
 
-    def config
-      yield self
-    end
-
-    def new name, opts = {}, clbk = {}
+    def initialize name, opts = {}, clbk = {}
       @options   = DEFAULT_OPTIONS
       @callbacks = DEFAULT_CALLBACKS
 
@@ -68,27 +64,43 @@ module Pigeon
           config.sleep = lambda { |n| 4**n }
         end
       end
-
-      self
     end
 
-    def http method, url, headers = {}, params = {}
-      Http::Request.new(method, url,
-                        read_timeout: @options['request_timeout'],
-                        open_timeout: @options['request_open_timeout'],
-                        ssl_verify:   @options['ssl_verify']).execute
+    def get url, args = {}
+      http(:get, url, args)
+    rescue => e
+      @callbacks['HttpError']&.call(e)
+    end
+
+    def post url, args = {}
+      http(:post, url, args)
+    rescue => e
+      @callbacks['HttpError']&.call(e)
+    end
+
+    def put url, args = {}
+      http(:put, url, args)
+    rescue => e
+      @callbacks['HttpError']&.call(e)
+    end
+
+    def delete url, args = {}
+      http(:delete, url, args)
+    rescue => e
+      @callbacks['HttpError']&.call(e)
+    end
+
+    def http method, url, args = {}
+      args.merge({
+        read_timeout: @options['request_timeout'],
+        open_timeout: @options['request_open_timeout'],
+        ssl_verify:   @options['ssl_verify']
+      })
+      Http::Request.new(method, url, args).execute
     end
 
     def circuit
       Circuitbox.circuit(@options['request_name'], exceptions: [HTTP::ConnectionError, HTTP::HeaderError, HTTP::RequestError, HTTP::ResponseError, HTTP::TimeoutError])
-    end
-
-    def get url, headers = {}
-      start = Time.now
-      http(:get, url)
-      diff = Time.now - start
-    rescue => e
-      @callbacks['HttpError']&.call(e)
     end
   end
 
