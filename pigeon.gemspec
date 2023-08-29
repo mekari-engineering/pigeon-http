@@ -35,6 +35,8 @@ Gem::Specification.new do |spec|
   # guide at: https://bundler.io/guides/creating_gem.html
 
   spec.add_dependency 'circuitbox'
+  spec.add_dependency 'ddtrace'
+  spec.add_dependency 'dogstatsd-ruby'
   spec.add_dependency 'http'
   spec.add_dependency 'http-cookie'
   spec.add_dependency 'mime-types'

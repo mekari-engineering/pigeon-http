@@ -3,6 +3,8 @@ PATH
   specs:
     pigeon (0.1.0)
       circuitbox
+      ddtrace
+      dogstatsd-ruby
       http
       http-cookie
       mime-types
@@ -15,7 +17,14 @@ GEM
       public_suffix (>= 2.0.2, < 6.0)
     ast (2.4.2)
     circuitbox (2.0.0)
+    ddtrace (1.5.2)
+      debase-ruby_core_source (>= 0.10.16, <= 0.10.17)
+      libdatadog (~> 0.7.0.1.1)
+      libddwaf (~> 1.5.1.0.0)
+      msgpack
+    debase-ruby_core_source (0.10.17)
     diff-lcs (1.5.0)
+    dogstatsd-ruby (5.3.3)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     ffi (1.15.5)
@@ -32,9 +41,13 @@ GEM
     http-form_data (2.3.0)
     http-parser (1.2.3)
       ffi-compiler (>= 1.0, < 2.0)
+    libdatadog (0.7.0.1.1)
+    libddwaf (1.5.1.0.1)
+      ffi (~> 1.0)
     mime-types (3.5.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2023.0808)
+    msgpack (1.7.2)
     parallel (1.23.0)
     parser (3.2.2.3)
       ast (~> 2.4.1)
