@@ -2,6 +2,9 @@
 
 begin
   require 'circuitbox'
+  require 'datadog/statsd'
+  require 'ddtrace'
+  require 'ddtrace/auto_instrument'
   require 'http'
   require 'http-cookie'
   require 'mime/types'
@@ -64,16 +67,38 @@ module Pigeon
           config.sleep = lambda { |n| 4**n }
         end
       end
+
+      Datadog.configure do |c|
+        c.env     = ENV['DD_ENV']
+        c.service = ENV['DD_SERVICE']
+        c.tracing.partial_flush.enabled = true
+        c.profiling.enabled = false
+        c.runtime_metrics.enabled = false
+        c.runtime_metrics.statsd = Datadog::Statsd.new
+        c.tracing.sampler = Datadog::Tracing::Sampling::PrioritySampler.new(
+                              post_sampler: Datadog::Tracing::Sampling::RuleSampler.new(
+                                              [Datadog::Tracing::Sampling::SimpleRule.new(service: ENV['DD_SERVICE'], sample_rate: 1.0)]
+                              )
+        )
+      end
     end
 
     def get url, args = {}
-      http(:get, url, args)
+      start = Time.now
+      response = http(:get, url, args)
+      Pigeon::Statsd.new(@options['request_name'] + '_latency', tags: [url]).capture(action: :histogram, count: (Time.now - start))
+
+      response
     rescue => e
       @callbacks['HttpError']&.call(e)
     end
 
     def post url, args = {}
-      http(:post, url, args)
+      start = Time.now
+      response = http(:post, url, args)
+      Pigeon::Statsd.new(@options['request_name'] + '_latency', tags: [url]).capture(action: :histogram, count: (Time.now - start))
+
+      response
     rescue => e
       @callbacks['HttpError']&.call(e)
     end
@@ -96,7 +121,10 @@ module Pigeon
         open_timeout: @options['request_open_timeout'],
         ssl_verify:   @options['ssl_verify']
       })
-      Http::Request.new(method, url, args).execute
+      response = Pigeon::Http::Request.new(method, url, args).execute
+      Pigeon::Statsd.new(@options['request_name'] + '_througput', tags: [url]).capture
+
+      response
     end
 
     def circuit
