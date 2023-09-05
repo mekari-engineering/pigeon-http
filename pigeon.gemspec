@@ -3,7 +3,7 @@
 require_relative 'lib/pigeon/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'pigeon'
+  spec.name          = 'pigeon-http'
   spec.version       = Pigeon::VERSION
   spec.authors       = ['Fitra Aditya']
   spec.email         = ['fitra.pradana@mekari.com']

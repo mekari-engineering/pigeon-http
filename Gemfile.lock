@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pigeon (0.1.0)
+    pigeon-http (0.1.0)
       circuitbox
       ddtrace
       dogstatsd-ruby
@@ -93,7 +93,7 @@ PLATFORMS
   -darwin-21
 
 DEPENDENCIES
-  pigeon!
+  pigeon-http!
   rake (~> 13.0)
   rspec (~> 3.0)
   rubocop (~> 0.80)
