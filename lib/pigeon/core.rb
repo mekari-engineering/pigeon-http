@@ -3,8 +3,6 @@
 begin
   require 'circuitbox'
   require 'datadog/statsd'
-  require 'ddtrace'
-  require 'ddtrace/auto_instrument'
   require 'http'
   require 'http-cookie'
   require 'mime/types'
