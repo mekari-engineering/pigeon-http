@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pigeon-http (0.1.1)
+    pigeon-http (0.1.2)
       circuitbox
       ddtrace
       dogstatsd-ruby
