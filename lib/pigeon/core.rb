@@ -82,7 +82,6 @@ module Pigeon
     def post url, args = {}
       start = Time.now
       response = http(:post, url, args)
-      puts @options
       Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: [url]).capture(action: :histogram, count: (Time.now - start)) unless @options[:monitoring]
 
       response
