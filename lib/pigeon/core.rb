@@ -18,10 +18,11 @@ rescue LoadError => e
 end
 
 module Pigeon
-  VALID_OPTIONS   = %w[request_timeout request_open_timeout ssl_verify volume_threshold error_threshold time_window sleep_window retryable retry_threshold].freeze
+  VALID_OPTIONS   = %w[environment request_timeout request_open_timeout ssl_verify volume_threshold error_threshold time_window sleep_window retryable retry_threshold monitoring monitoring_type].freeze
   VALID_CALLBACKS = %w[CircuitBreakerOpen CircuitBreakerClose HttpSuccess HttpError RetrySuccess RetryFailure]
 
   DEFAULT_OPTIONS = {
+    environment:          'default',
     request_name:         'pigeon_default',
     request_timeout:      60,
     request_open_timeout: 0,
@@ -32,7 +33,8 @@ module Pigeon
     sleep_window:         10,
     retryable:            true,
     retry_threshold:      3,
-    monitoring:           false
+    monitoring:           false,
+    monitoring_type:      'datadog'
   }
   DEFAULT_CALLBACKS = {
     CircuitBreakerOpen:  nil,
