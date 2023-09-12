@@ -71,6 +71,11 @@ module Pigeon
       end
     end
 
+    def config key, value
+      raise Error::Argument, "unknown option #{key}" unless VALID_OPTIONS.include?(key.to_s)
+      @options[key.to_sym] = value
+    end
+
     def get url, args = {}
       start = Time.now
       response = http(:get, url, args)
