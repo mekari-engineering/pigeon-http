@@ -119,7 +119,11 @@ module Pigeon
         ssl_verify:   @options[:ssl_verify]
       })
       response = Pigeon::Http::Request.new(method, url, args).execute
-      Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: [url]).capture
+
+      if @options[:monitoring]
+        Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: [url]).capture
+        Pigeon::Statsd.new(@options[:request_name] + '_status', tags: [response.code]).capture
+      end
 
       response
     end
