@@ -77,42 +77,32 @@ module Pigeon
     end
 
     def get url, args = {}
-      start = Time.now
       response = http(:get, url, args)
-      Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: [url]).capture(action: :histogram, count: (Time.now - start)) unless @options[:monitoring]
-
-      response
     rescue => e
+      puts e
       @callbacks[:HttpError]&.call(e)
     end
 
     def post url, args = {}
-      start = Time.now
       response = http(:post, url, args)
-      Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: [url]).capture(action: :histogram, count: (Time.now - start)) unless @options[:monitoring]
-
-      response
     rescue => e
       @callbacks[:HttpError]&.call(e)
     end
 
     def put url, args = {}
-      start = Time.now
       response = http(:put, url, args)
-      Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: [url]).capture(action: :histogram, count: (Time.now - start)) unless @options[:monitoring]
-
-      response
     rescue => e
       @callbacks[:HttpError]&.call(e)
     end
 
     def delete url, args = {}
-      http(:delete, url, args)
+      response = http(:delete, url, args)
     rescue => e
       @callbacks[:HttpError]&.call(e)
     end
 
     def http method, url, args = {}
+      start = Time.now
       args.merge({
         read_timeout: @options[:request_timeout],
         open_timeout: @options[:request_open_timeout],
@@ -120,10 +110,10 @@ module Pigeon
       })
       response = Pigeon::Http::Request.new(method, url, args).execute
 
-      if @options[:monitoring]
-        Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: [url]).capture
-        Pigeon::Statsd.new(@options[:request_name] + '_status', tags: [response.code]).capture
-      end
+      uri = URI.parse(url)
+      Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: [uri.host]).capture(action: :histogram, count: (Time.now - start))
+      Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: [uri.host]).capture
+      Pigeon::Statsd.new(@options[:request_name] + '_status', tags: [response.code]).capture
 
       response
     end
