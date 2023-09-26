@@ -110,9 +110,9 @@ module Pigeon
       response = Pigeon::Http::Request.new(method, url, args).execute
 
       uri = URI.parse(url)
-      Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: [uri.host]).capture(action: :histogram, count: (Time.now - start))
-      Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: [uri.host]).capture
-      Pigeon::Statsd.new(@options[:request_name] + '_status', tags: [response.code]).capture
+      Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: ["host:#{uri.host}"]).capture(action: :histogram, count: (Time.now - start))
+      Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: ["host:#{uri.host}"]).capture
+      Pigeon::Statsd.new(@options[:request_name] + '_status', tags: ["host:#{uri.host}", "http:#{response.code}"]).capture
 
       response
     end
