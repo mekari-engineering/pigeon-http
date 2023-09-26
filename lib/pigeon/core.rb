@@ -79,7 +79,6 @@ module Pigeon
     def get url, args = {}
       response = http(:get, url, args)
     rescue => e
-      puts e
       @callbacks[:HttpError]&.call(e)
     end
 

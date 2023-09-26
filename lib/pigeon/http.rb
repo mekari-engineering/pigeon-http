@@ -17,7 +17,7 @@ module Pigeon
     end
 
     class Request
-      VALID_PARAMETERS        = %w[headers query body auth timeout open_timeout ssl_timeout read_timeout max_redirects ssl_verify]
+      VALID_PARAMETERS        = %w[headers query body form auth timeout open_timeout ssl_timeout read_timeout max_redirects ssl_verify]
       DEFAULT_HEADERS         = { 'User-Agent' => 'HTTP Client API/1.0' }
       VALID_VERBS             = [GET, HEAD, PUT, POST, DELETE, OPTIONS, TRACE]
       VALID_SSL_VERIFICATIONS = [SSL_VERIFY_NONE, SSL_VERIFY_PEER]
@@ -81,24 +81,28 @@ module Pigeon
         klass    = find_delegate_class(verb)
         headers  = DEFAULT_HEADERS.merge(args.fetch(:headers, {}))
         body     = args[:body]&.to_json
+        form     = args[:form]&.transform_keys(&:to_s)
         query    = args[:query]
         uri      = uri.dup
         delegate = klass.new(uri, headers)
 
+        delegate.content_type = 'application/json'
+
         if body
           raise Error::Argument, "#{verb} cannot have body" unless klass.const_get(:REQUEST_HAS_BODY)
-          delegate.content_type = 'application/json'
-          delegate.body         = body
+          delegate.body = body
+        elsif form
+          raise Error::Argument, "#{verb} cannot have form" unless klass.const_get(:REQUEST_HAS_BODY)
+          delegate.content_type = 'multipart/form-data'
+          delegate.set_form(form, 'multipart/form-data')
         elsif query
           if klass.const_get(:REQUEST_HAS_BODY)
-            delegate = klass.new(uri, headers)
+            delegate.content_type = 'application/x-www-form-urlencoded'
             delegate.set_form_data(query)
           else
             uri.query = URI.encode_www_form(query)
-            delegate  = klass.new(uri, headers)
+            delegate = klass.new(uri, headers)
           end
-        else
-          delegate = klass.new(uri, headers)
         end
 
         delegate
