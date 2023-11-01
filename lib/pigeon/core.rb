@@ -24,8 +24,9 @@ module Pigeon
   DEFAULT_OPTIONS = {
     environment:          'default',
     request_name:         'pigeon_default',
-    request_timeout:      60,
-    request_open_timeout: 0,
+    request_timeout:      10,
+    request_open_timeout: 10,
+    circuit_breaker:      false,
     ssl_verify:           true,
     volume_threshold:     10,
     error_threshold:      10,
@@ -78,8 +79,8 @@ module Pigeon
 
     def get url, args = {}
       response = http(:get, url, args)
-    rescue => e
-      @callbacks[:HttpError]&.call(e)
+    #rescue => e
+      #@callbacks[:HttpError]&.call(e)
     end
 
     def post url, args = {}
@@ -107,12 +108,23 @@ module Pigeon
         open_timeout: @options[:request_open_timeout],
         ssl_verify:   @options[:ssl_verify]
       })
-      response = Pigeon::Http::Request.new(method, url, args).execute
 
       uri = URI.parse(url)
-      Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: ["host:#{uri.host}"]).capture(action: :histogram, count: (Time.now - start))
-      Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: ["host:#{uri.host}"]).capture
-      Pigeon::Statsd.new(@options[:request_name] + '_status', tags: ["host:#{uri.host}", "http:#{response.code}"]).capture
+      response = nil
+
+      Retryable.retryable(tries: 3) do |retries, exception|
+        if retries > 0 && @options[:monitoring]
+          Pigeon::Statsd.new(@options[:request_name] + '_retry_count', tags: ["host:#{uri.host}", "retry:#{exception}"]).capture
+        end
+
+        response = Pigeon::Http::Request.new(method, url, args).execute
+      end
+
+      if @options[:monitoring]
+        Pigeon::Statsd.new(@options[:request_name] + '_latency', tags: ["host:#{uri.host}"]).capture(action: :histogram, count: (Time.now - start))
+        Pigeon::Statsd.new(@options[:request_name] + '_througput', tags: ["host:#{uri.host}"]).capture
+        Pigeon::Statsd.new(@options[:request_name] + '_status', tags: ["host:#{uri.host}", "http:#{response.code}"]).capture
+      end
 
       response
     end
