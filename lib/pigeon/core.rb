@@ -24,15 +24,15 @@ module Pigeon
   DEFAULT_OPTIONS = {
     environment:          'default',
     request_name:         'pigeon_default',
-    request_timeout:      10,
-    request_open_timeout: 10,
+    request_timeout:      60,
+    request_open_timeout: 60,
     circuit_breaker:      false,
     ssl_verify:           true,
     volume_threshold:     10,
     error_threshold:      10,
     time_window:          10,
     sleep_window:         10,
-    retryable:            true,
+    retryable:            false,
     retry_threshold:      3,
     monitoring:           false,
     monitoring_type:      'datadog'
@@ -69,6 +69,8 @@ module Pigeon
         Retryable.configure do |config|
           config.sleep = lambda { |n| 4**n }
         end
+      else
+        Retryable.disable
       end
     end
 
@@ -79,8 +81,8 @@ module Pigeon
 
     def get url, args = {}
       response = http(:get, url, args)
-    #rescue => e
-      #@callbacks[:HttpError]&.call(e)
+    rescue => e
+      @callbacks[:HttpError]&.call(e)
     end
 
     def post url, args = {}
@@ -103,16 +105,16 @@ module Pigeon
 
     def http method, url, args = {}
       start = Time.now
-      args.merge({
-        read_timeout: @options[:request_timeout],
-        open_timeout: @options[:request_open_timeout],
+      args = args.merge({
+        read_timeout: @options[:request_timeout].to_i,
+        open_timeout: @options[:request_open_timeout].to_i,
         ssl_verify:   @options[:ssl_verify]
       })
 
       uri = URI.parse(url)
       response = nil
 
-      Retryable.retryable(tries: 3) do |retries, exception|
+      Retryable.retryable(tries: @options[:retry_threshold].to_i) do |retries, exception|
         if retries > 0 && @options[:monitoring]
           Pigeon::Statsd.new(@options[:request_name] + '_retry_count', tags: ["host:#{uri.host}", "retry:#{exception}"]).capture
         end

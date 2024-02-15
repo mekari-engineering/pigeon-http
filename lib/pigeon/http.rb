@@ -18,7 +18,7 @@ module Pigeon
 
     class Request
       VALID_PARAMETERS        = %w[headers query body form auth timeout open_timeout ssl_timeout read_timeout max_redirects ssl_verify]
-      DEFAULT_HEADERS         = { 'User-Agent' => 'HTTP Client API/1.0' }
+      DEFAULT_HEADERS         = { 'User-Agent' => 'Qontak Pigeon/1.0' }
       VALID_VERBS             = [GET, HEAD, PUT, POST, DELETE, OPTIONS, TRACE]
       VALID_SSL_VERIFICATIONS = [SSL_VERIFY_NONE, SSL_VERIFY_PEER]
 
@@ -34,7 +34,12 @@ module Pigeon
         @open_timeout = args[:open_timeout] if args[:open_timeout]
         @read_timeout = args[:read_timeout] if args[:read_timeout]
         @ssl_timeout  = args[:ssl_timeout]  if args[:ssl_timeout]
-        @ssl_verify   = args.fetch(:ssl_verify, SSL_VERIFY_PEER)
+
+        if args[:ssl_verify]
+          @ssl_verify = SSL_VERIFY_PEER
+        else
+          @ssl_verify = SSL_VERIFY_NONE
+        end
 
         # handle basic auth
         if (auth = args[:auth])
@@ -48,6 +53,7 @@ module Pigeon
 
       def execute
         response = request!(uri, @delegate)
+
         Response.new(response, uri)
       end
 
