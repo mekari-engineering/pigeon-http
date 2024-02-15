@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pigeon-http (0.1.5)
+    pigeon-http (0.1.6)
       circuitbox
       ddtrace
       dogstatsd-ruby
@@ -27,7 +27,7 @@ GEM
     dogstatsd-ruby (5.3.3)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    ffi (1.15.5)
+    ffi (1.16.2)
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
