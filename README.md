@@ -108,3 +108,7 @@ The retry mechanism using backoff time using following calculation:
 ```
 
 Which `n` is retry counter.
+
+### Monitoring
+
+- [Datadog custom metric](https://github.com/fitraditya/pigeon-http/blob/master/doc/DATADOG.md)
