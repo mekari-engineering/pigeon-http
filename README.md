@@ -1,43 +1,110 @@
 # Pigeon
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/pigeon`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Enhanced http client for ruby. Packed with retry mechanism, circuit breaker, and datadog monitoring.
 
 ## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'pigeon'
 ```
-
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install pigeon
+gem install pigeon-http
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+### Basic Usage
 
-## Development
+```
+require 'pigeon-http'
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+client = Pigeon::Client.new('http_request')
+response = client.get('https://google.com')
+```
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+### Configuration
 
-## Contributing
+Pigeon comes with configurable options related to http request.
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/pigeon. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/pigeon/blob/master/CODE_OF_CONDUCT.md).
+```
+options: {
+    request_timeout: 60,        # default value
+    request_open_timeout: 60,   # default value
+    ssl_verify: false,          # default value
+}
 
-## License
+client = Pigeon::Client.new('http_request', options: options)
+response = client.get('https://google.com')
+```
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+Note: `http_request` is a request identifier. It will be used as circuit breaker and datadog monitoring name.
 
-## Code of Conduct
+### POST and PUT with Payloads
 
-Everyone interacting in the Pigeon project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/pigeon/blob/master/CODE_OF_CONDUCT.md).
+#### JSON (application/json)
+```
+require 'pigeon-http'
+
+payload: {
+    foo: "bar"
+}
+
+client = Pigeon::Client.new('http_request')
+response = client.post('https://google.com', body: payload)
+```
+
+#### Form URL-encoded (application/x-www-form-urlencoded)
+```
+require 'pigeon-http'
+
+payload: {
+    foo: "bar"
+}
+
+client = Pigeon::Client.new('http_request')
+response = client.post('https://google.com', query: payload)
+```
+
+#### Form Data (multipart/form-data)
+```
+require 'pigeon-http'
+
+payload: {
+    foo: "bar"
+}
+
+client = Pigeon::Client.new('http_request')
+response = client.post('https://google.com', form: payload)
+```
+
+### GET with Query Params
+
+Query params only applicable for GET request.
+```
+require 'pigeon-http'
+
+param: {
+    foo: "bar"
+}
+
+client = Pigeon::Client.new('http_request')
+response = client.get('https://google.com', query: param)
+```
+
+### Retryable
+
+By default, the retry mechanism is disable. We can enable and configure it when initialize the pigeon.
+
+
+```
+options: {
+    retryable: false,   # default value
+    retry_threshold: 3  # default value
+}
+
+client = Pigeon::Client.new('http_request', options: options)
+response = client.get('https://google.com')
+```
+
+The retry mechanism using backoff time using following calculation:
+
+```
+4**n
+```
+
+Which `n` is retry counter.
