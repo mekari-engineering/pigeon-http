@@ -41,4 +41,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'http-cookie'
   spec.add_dependency 'mime-types'
   spec.add_dependency 'retryable'
+
+  spec.add_development_dependency 'rubocop-performance'
 end
