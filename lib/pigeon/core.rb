@@ -29,9 +29,10 @@ module Pigeon
     circuit_breaker:      false,
     ssl_verify:           true,
     volume_threshold:     10,
-    error_threshold:      10,
-    time_window:          10,
-    sleep_window:         10,
+    error_threshold:      50,
+    time_window:          60,
+    sleep_window:         120,
+    circuit_store:        nil,
     retryable:            false,
     retry_threshold:      3,
     monitoring:           false,
@@ -132,7 +133,17 @@ module Pigeon
     end
 
     def circuit
-      Circuitbox.circuit(@options[:request_name], exceptions: [HTTP::ConnectionError, HTTP::HeaderError, HTTP::RequestError, HTTP::ResponseError, HTTP::TimeoutError])
+      circuit_options = {
+        time_window:      @options[:time_window],
+        volume_threshold: @options[:volume_threshold],
+        error_threshold:  @options[:error_threshold],
+        sleep_window:     @options[:sleep_window],
+        exceptions:       [HTTP::ConnectionError, HTTP::HeaderError, HTTP::RequestError, HTTP::ResponseError, HTTP::TimeoutError]
+      }
+      unless @options[:circuit_store].nil?
+        circuit_options[:circuit_store] = @options[:circuit_store]
+      end
+      Circuitbox.circuit(@options[:request_name], circuit_options)
     end
   end
 
