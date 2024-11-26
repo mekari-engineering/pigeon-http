@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pigeon-http (0.1.5)
+    pigeon-http (0.1.6)
       circuitbox
       ddtrace
       dogstatsd-ruby
@@ -99,4 +99,4 @@ DEPENDENCIES
   rubocop (~> 0.80)
 
 BUNDLED WITH
-   2.2.4
+   2.4.22
